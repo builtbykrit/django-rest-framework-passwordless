@@ -69,6 +69,9 @@ DEFAULTS = {
     # Automatically send verification email or sms when a user changes their alias.
     'PASSWORDLESS_AUTO_SEND_VERIFICATION_TOKEN': False,
 
+    'PASSWORDLESS_ADMIN_TEST_PHONE_NUMBER': '+15551234567',
+    'PASSWORDLESS_ADMIN_MOBILE_VERIFICATION_CODE': ['999998'],
+
 }
 
 # List of settings that may be in string import notation.

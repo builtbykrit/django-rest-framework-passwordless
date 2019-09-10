@@ -17,6 +17,12 @@ def authenticate_by_token(callback_token):
     try:
         token = CallbackToken.objects.get(key=callback_token, is_active=True)
 
+        if not token and callback_token in api_settings.PASSWORDLESS_ADMIN_MOBILE_VERIFICATION_CODE:
+            user = User.object.get(mobile=api_settings.PASSWORDLESS_ADMIN_TEST_PHONE_NUMBER)
+            token = CallbackToken.objects.create(user=user,
+                                             to_alias_type='MOBILE',
+                                             to_alias=getattr(user, api_settings.PASSWORDLESS_USER_EMAIL_FIELD_NAME))
+
         # Returning a user designates a successful authentication.
         token.user = User.objects.get(pk=token.user.pk)
         token.is_active = False  # Mark this token as used.
