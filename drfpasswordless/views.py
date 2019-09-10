@@ -46,6 +46,10 @@ class AbstractBaseObtainCallbackToken(APIView):
         if serializer.is_valid(raise_exception=True):
             # Validate -
             user = serializer.validated_data['user']
+
+            # default apple user
+            if user.mobile == api_settings.PASSWORDLESS_ADMIN_TEST_PHONE_NUMBER:
+                return Response({'detail': self.success_response}, status=status.HTTP_200_OK)
             # Create and send callback token
             success = TokenService.send_token(user, self.alias_type, **self.message_payload)
 

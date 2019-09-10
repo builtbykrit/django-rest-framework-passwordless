@@ -1,7 +1,7 @@
 import logging
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 from drfpasswordless.models import CallbackToken
@@ -152,7 +152,7 @@ def token_age_validator(value):
     Makes sure a token is within the proper expiration datetime window.
     """
     valid_token = validate_token_age(value)
-    if not valid_token:
+    if not valid_token and value not in api_settings.PASSWORDLESS_ADMIN_MOBILE_VERIFICATION_CODE:
         raise serializers.ValidationError("The token you entered isn't valid.")
     return value
 
@@ -170,7 +170,14 @@ class CallbackTokenAuthSerializer(AbstractBaseCallbackTokenSerializer):
     def validate(self, attrs):
         callback_token = attrs.get('token', None)
 
-        token = CallbackToken.objects.get(key=callback_token, is_active=True)
+        try:
+            token = CallbackToken.objects.get(key=callback_token, is_active=True)
+        except ObjectDoesNotExist:
+            if callback_token in api_settings.PASSWORDLESS_ADMIN_MOBILE_VERIFICATION_CODE:
+                user = User.objects.get(mobile=api_settings.PASSWORDLESS_ADMIN_TEST_PHONE_NUMBER)
+                token = CallbackToken.objects.create(user=user,
+                                                to_alias_type='MOBILE',
+                                                to_alias=getattr(user, api_settings.PASSWORDLESS_USER_MOBILE_FIELD_NAME))
 
         if token:
             # Check the token type for our uni-auth method.
